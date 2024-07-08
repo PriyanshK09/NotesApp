@@ -1,30 +1,41 @@
 // src/components/LoginPage.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './LoginPage.css';
 
 function LoginPage({ setLoading }) {
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username.trim()) {
-      setLoading(true);
-      setTimeout(() => {
-        localStorage.setItem('username', username);
-        setLoading(false);
+    setLoading(true);
+    try {
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const response = await axios.post(`http://localhost:5000${endpoint}`, { username, password });
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('username', response.data.username);
         navigate('/main');
-      }, 2000); // Simulate loading delay
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'An error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>Welcome to Notes App</h1>
-        <form onSubmit={handleLogin}>
+        <h1>{isLogin ? 'Login' : 'Register'}</h1>
+        <form onSubmit={handleSubmit}>
           <div className={`input-group ${isFocused || username ? 'focused' : ''}`}>
             <input
               type="text"
@@ -36,10 +47,24 @@ function LoginPage({ setLoading }) {
             />
             <label>Username</label>
           </div>
+          <div className={`input-group ${isFocused || password ? 'focused' : ''}`}>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              required
+            />
+            <label>Password</label>
+          </div>
           <button type="submit" className="login-button">
-            Get Started
+            {isLogin ? 'Login' : 'Register'}
           </button>
         </form>
+        <p onClick={() => setIsLogin(!isLogin)} style={{ cursor: 'pointer', marginTop: '10px' }}>
+          {isLogin ? 'Need an account? Register' : 'Already have an account? Login'}
+        </p>
       </div>
     </div>
   );

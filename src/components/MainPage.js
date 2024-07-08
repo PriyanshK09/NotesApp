@@ -1,9 +1,10 @@
 // src/components/MainPage.js
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Note from "./Note";
 import "./MainPage.css";
 
-function MainPage() {
+function MainPage({ logout }) {
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
   const [darkMode, setDarkMode] = useState(false);
@@ -13,11 +14,22 @@ function MainPage() {
   const MAX_CHARS = 200;
 
   useEffect(() => {
-    const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
-    setNotes(savedNotes);
+    fetchNotes();
     const savedTheme = localStorage.getItem("theme") || "light";
     setDarkMode(savedTheme === "dark");
   }, []);
+
+  const fetchNotes = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:5000/api/notes", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotes(response.data);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  };
 
   const getRandomColor = () => {
     const colors = [
@@ -31,31 +43,54 @@ function MainPage() {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  const addNote = () => {
+  const addNote = async () => {
     if (newNote.trim() && newNote.length <= MAX_CHARS) {
-      const note = {
-        text: newNote,
-        date: new Date().toLocaleDateString("en-GB"),
-        color: getRandomColor(),
-      };
-      const updatedNotes = [...notes, note];
-      setNotes(updatedNotes);
-      localStorage.setItem("notes", JSON.stringify(updatedNotes));
-      setNewNote("");
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.post(
+          "http://localhost:5000/api/notes",
+          {
+            text: newNote,
+            color: getRandomColor(),
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setNotes([...notes, response.data]);
+        setNewNote("");
+      } catch (error) {
+        console.error("Error adding note:", error);
+      }
     }
   };
 
-  const deleteNote = (index) => {
-    const updatedNotes = notes.filter((_, i) => i !== index);
-    setNotes(updatedNotes);
-    localStorage.setItem("notes", JSON.stringify(updatedNotes));
+  const deleteNote = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/api/notes/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotes(notes.filter((note) => note._id !== id));
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
   };
 
-  const editNote = (index, newText) => {
-    const updatedNotes = [...notes];
-    updatedNotes[index].text = newText;
-    setNotes(updatedNotes);
-    localStorage.setItem("notes", JSON.stringify(updatedNotes));
+  const editNote = async (id, newText) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.put(
+        `http://localhost:5000/api/notes/${id}`,
+        { text: newText },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setNotes(notes.map((note) => (note._id === id ? response.data : note)));
+    } catch (error) {
+      console.error("Error editing note:", error);
+    }
   };
 
   const toggleTheme = () => {
@@ -84,6 +119,9 @@ function MainPage() {
           </button>
           <button className="menu-item" title="Settings">
             ⚙️
+          </button>
+          <button className="menu-item" onClick={logout} title="Logout">
+            🚪
           </button>
         </nav>
         <button
@@ -133,12 +171,12 @@ function MainPage() {
             .filter((note) =>
               note.text.toLowerCase().includes(searchTerm.toLowerCase())
             )
-            .map((note, index) => (
+            .map((note) => (
               <Note
-                key={index}
+                key={note._id}
                 note={note}
-                onDelete={() => deleteNote(index)}
-                onEdit={(newText) => editNote(index, newText)}
+                onDelete={() => deleteNote(note._id)}
+                onEdit={(newText) => editNote(note._id, newText)}
               />
             ))}
         </div>
