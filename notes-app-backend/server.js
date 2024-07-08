@@ -19,8 +19,17 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('Connected to MongoDB'))
 .catch((err) => console.error('MongoDB connection error:', err));
 
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+  });
+
 app.get('/', (req, res) => {
-    res.redirect('https://notesmee.netlify.app/');
+    res.send(`
+      <script>
+        alert('Backend server is running');
+        window.location.href = 'https://notesmee.netlify.app/';
+      </script>
+    `);
 });
 
 app.use('/api/auth', authRoutes);
