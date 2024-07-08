@@ -1,0 +1,81 @@
+/* src/components/Note.css */
+.note {
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.note:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.note p {
+    margin: 0;
+    white-space: pre-wrap;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.note textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    font-family: inherit;
+    color: inherit;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.note-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.note-footer small {
+    font-size: 0.75rem;
+    color: inherit;
+}
+
+.note-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.note-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: inherit;
+    transition: transform 0.2s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.note-actions button:hover {
+    transform: scale(1.1);
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.edit-button::before {
+    content: '✏️';
+}
+
+.delete-button::before {
+    content: '🗑️';
+}
+
+.save-button::before {
+    content: '💾';
+}
